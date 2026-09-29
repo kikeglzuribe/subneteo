@@ -1,0 +1,1339 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#4f46e5">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Subneteo Móvil">
+    <link rel="apple-touch-icon" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512' fill='%23ffffff'><rect width='512' height='512' rx='120' fill='%234f46e5'/><path d='M160 160h192v48H160zm0 96h192v48H160zm0 96h120v48H160z'/></svg>">
+    
+    <title>Master Subneteo Móvil - Tarjetas de Práctica</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#eef2ff',
+                            100: '#e0e7ff',
+                            500: '#6366f1',
+                            600: '#4f46e5',
+                            700: '#4338ca',
+                            900: '#312e81',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .mono {
+            font-family: 'JetBrains Mono', monospace;
+        }
+        /* Custom scrollbar for mobile dynamic views */
+        ::-webkit-scrollbar {
+            width: 4px;
+            height: 4px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.05);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(99, 102, 241, 0.3);
+            border-radius: 4px;
+        }
+        .ip-input:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.25);
+        }
+        .flip-card-inner {
+            transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            transform-style: preserve-3d;
+        }
+        .flip-card.flipped .flip-card-inner {
+            transform: rotateY(180deg);
+        }
+        .backface-hidden {
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
+        }
+    </style>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col pb-20 select-none">
+
+    <!-- Header principal -->
+    <header class="bg-slate-800/90 backdrop-blur border-b border-slate-700/80 sticky top-0 z-50 px-4 py-3 shadow-md">
+        <div class="max-w-lg mx-auto flex items-center justify-between">
+            <div class="flex items-center space-x-2.5">
+                <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-500 flex items-center justify-center text-white shadow-lg shadow-indigo-500/30">
+                    <i class="fa-solid fa-network-wired text-base"></i>
+                </div>
+                <div>
+                    <h1 class="text-base font-bold text-white leading-tight">Subneteo Móvil</h1>
+                    <p class="text-[11px] text-indigo-300 font-medium">Tarjetas de Práctica & Cálculo IP</p>
+                </div>
+            </div>
+            
+            <div class="flex items-center space-x-2">
+                <!-- Botón de Instalación PWA / Acceso Directo -->
+                <button id="install-pwa-btn" onclick="promptPWAInstall()" class="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold px-2.5 py-1 rounded-lg text-xs flex items-center gap-1 shadow-md shadow-emerald-600/20 active:scale-95 transition">
+                    <i class="fa-solid fa-download text-xs"></i>
+                    <span class="hidden sm:inline">Instalar</span> App
+                </button>
+
+                <!-- Contador de Racha y Puntos -->
+                <div class="flex items-center space-x-2 bg-slate-900/80 border border-slate-700 rounded-full px-2.5 py-1">
+                    <div class="flex items-center text-amber-400 font-bold text-xs">
+                        <i class="fa-solid fa-fire mr-1 text-sm animate-pulse"></i>
+                        <span id="streak-counter">0</span>
+                    </div>
+                    <span class="text-slate-600">|</span>
+                    <div class="flex items-center text-emerald-400 font-bold text-xs">
+                        <i class="fa-solid fa-check mr-1"></i>
+                        <span id="score-counter">0</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main class="flex-1 max-w-lg w-full mx-auto px-3 pt-4 pb-6">
+        
+        <!-- Pestañas de Navegación Móvil -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-1.5 bg-slate-800 p-1 rounded-xl mb-4 border border-slate-700/60 shadow-inner">
+            <button id="tab-cards" onclick="switchTab('cards')" class="tab-btn active bg-indigo-600 text-white font-semibold py-2 px-2 text-xs rounded-lg transition-all flex items-center justify-center gap-1.5 shadow">
+                <i class="fa-solid fa-layer-group"></i>
+                <span>Tarjetas</span>
+            </button>
+            <button id="tab-quiz" onclick="switchTab('quiz')" class="tab-btn text-slate-400 hover:text-slate-200 font-medium py-2 px-2 text-xs rounded-lg transition-all flex items-center justify-center gap-1.5">
+                <i class="fa-solid fa-graduation-cap"></i>
+                <span>Quiz CCNA</span>
+            </button>
+            <button id="tab-calc" onclick="switchTab('calc')" class="tab-btn text-slate-400 hover:text-slate-200 font-medium py-2 px-2 text-xs rounded-lg transition-all flex items-center justify-center gap-1.5">
+                <i class="fa-solid fa-calculator"></i>
+                <span>Calculadora</span>
+            </button>
+            <button id="tab-cheat" onclick="switchTab('cheat')" class="tab-btn text-slate-400 hover:text-slate-200 font-medium py-2 px-2 text-xs rounded-lg transition-all flex items-center justify-center gap-1.5">
+                <i class="fa-solid fa-book-bookmark"></i>
+                <span>Machete</span>
+            </button>
+        </div>
+
+        <!-- SECCIÓN 1: TARJETAS DE PRÁCTICA -->
+        <section id="section-cards" class="space-y-4">
+            
+            <!-- Selector de Dificultad -->
+            <div class="flex items-center justify-between bg-slate-800/60 border border-slate-700/50 rounded-xl p-2.5">
+                <span class="text-xs text-slate-300 font-medium flex items-center gap-1.5">
+                    <i class="fa-solid fa-sliders text-indigo-400"></i> Dificultad:
+                </span>
+                <div class="flex space-x-1">
+                    <button onclick="setDifficulty('easy')" id="diff-easy" class="diff-btn bg-emerald-600/30 text-emerald-300 border border-emerald-500/40 px-2.5 py-1 rounded-lg text-xs font-semibold">
+                        Fácil (/24-/30)
+                    </button>
+                    <button onclick="setDifficulty('medium')" id="diff-medium" class="diff-btn text-slate-400 border border-transparent px-2.5 py-1 rounded-lg text-xs font-medium hover:bg-slate-700/50">
+                        Medio (/16-/30)
+                    </button>
+                    <button onclick="setDifficulty('hard')" id="diff-hard" class="diff-btn text-slate-400 border border-transparent px-2.5 py-1 rounded-lg text-xs font-medium hover:bg-slate-700/50">
+                        Pro (/8-/30)
+                    </button>
+                </div>
+            </div>
+
+            <!-- Tarjeta Problema Principal -->
+            <div class="bg-gradient-to-br from-slate-800 to-slate-850 rounded-2xl border border-slate-700 shadow-xl overflow-hidden">
+                <!-- Header de la tarjeta -->
+                <div class="bg-indigo-950/60 border-b border-indigo-800/40 p-4 text-center relative">
+                    <span class="bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 text-[10px] uppercase font-bold tracking-wider px-2.5 py-0.5 rounded-full mb-1 inline-block">
+                        Problema Generado
+                    </span>
+                    <div class="text-3xl font-extrabold text-white mono tracking-tight my-1" id="problem-target-ip">
+                        192.168.1.45 <span class="text-indigo-400 font-semibold">/ 26</span>
+                    </div>
+                    <p class="text-xs text-slate-400 mt-1">Calcula los parámetros de subred para esta IP:</p>
+                    
+                    <button onclick="generateNewProblem()" class="absolute right-3 top-3 bg-slate-700/80 hover:bg-slate-700 text-indigo-300 hover:text-white p-2 rounded-xl transition-all shadow" title="Nuevo Ejercicio">
+                        <i class="fa-solid fa-arrows-rotate text-sm"></i>
+                    </button>
+                </div>
+
+                <!-- Formulario de Respuestas Optimizado para Móvil -->
+                <div class="p-4 space-y-3.5">
+
+                    <!-- Campo: Dirección de Red -->
+                    <div class="space-y-1">
+                        <div class="flex justify-between items-center text-xs">
+                            <label for="ans-network" class="font-semibold text-slate-200 flex items-center gap-1.5">
+                                <i class="fa-solid fa-network-wired text-indigo-400 text-xs"></i>
+                                Dirección de Red
+                            </label>
+                            <span id="feedback-network" class="text-[11px] font-medium hidden"></span>
+                        </div>
+                        <div class="flex gap-1.5">
+                            <input type="text" id="ans-network" inputmode="decimal" placeholder="Ej. 192.168.1.0" class="ip-input w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-sm mono text-white placeholder-slate-500">
+                            <button onclick="checkSingle('network')" class="bg-slate-700/80 hover:bg-indigo-600 text-slate-300 hover:text-white px-3 rounded-xl transition text-xs font-semibold shrink-0">
+                                <i class="fa-solid fa-check"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Campo: Primer Host Utilizable -->
+                    <div class="space-y-1">
+                        <div class="flex justify-between items-center text-xs">
+                            <label for="ans-first" class="font-semibold text-slate-200 flex items-center gap-1.5">
+                                <i class="fa-solid fa-play text-emerald-400 text-xs"></i>
+                                Primer Host Utilizable
+                            </label>
+                            <span id="feedback-first" class="text-[11px] font-medium hidden"></span>
+                        </div>
+                        <div class="flex gap-1.5">
+                            <input type="text" id="ans-first" inputmode="decimal" placeholder="Ej. 192.168.1.1" class="ip-input w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-sm mono text-white placeholder-slate-500">
+                            <button onclick="checkSingle('first')" class="bg-slate-700/80 hover:bg-indigo-600 text-slate-300 hover:text-white px-3 rounded-xl transition text-xs font-semibold shrink-0">
+                                <i class="fa-solid fa-check"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Campo: Último Host Utilizable -->
+                    <div class="space-y-1">
+                        <div class="flex justify-between items-center text-xs">
+                            <label for="ans-last" class="font-semibold text-slate-200 flex items-center gap-1.5">
+                                <i class="fa-solid fa-stop text-amber-400 text-xs"></i>
+                                Último Host Utilizable
+                            </label>
+                            <span id="feedback-last" class="text-[11px] font-medium hidden"></span>
+                        </div>
+                        <div class="flex gap-1.5">
+                            <input type="text" id="ans-last" inputmode="decimal" placeholder="Ej. 192.168.1.62" class="ip-input w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-sm mono text-white placeholder-slate-500">
+                            <button onclick="checkSingle('last')" class="bg-slate-700/80 hover:bg-indigo-600 text-slate-300 hover:text-white px-3 rounded-xl transition text-xs font-semibold shrink-0">
+                                <i class="fa-solid fa-check"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Campo: Dirección de Broadcast -->
+                    <div class="space-y-1">
+                        <div class="flex justify-between items-center text-xs">
+                            <label for="ans-broadcast" class="font-semibold text-slate-200 flex items-center gap-1.5">
+                                <i class="fa-solid fa-tower-broadcast text-rose-400 text-xs"></i>
+                                Dirección de Broadcast
+                            </label>
+                            <span id="feedback-broadcast" class="text-[11px] font-medium hidden"></span>
+                        </div>
+                        <div class="flex gap-1.5">
+                            <input type="text" id="ans-broadcast" inputmode="decimal" placeholder="Ej. 192.168.1.63" class="ip-input w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-sm mono text-white placeholder-slate-500">
+                            <button onclick="checkSingle('broadcast')" class="bg-slate-700/80 hover:bg-indigo-600 text-slate-300 hover:text-white px-3 rounded-xl transition text-xs font-semibold shrink-0">
+                                <i class="fa-solid fa-check"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Campo: Máscara de Red -->
+                    <div class="space-y-1">
+                        <div class="flex justify-between items-center text-xs">
+                            <label for="ans-mask" class="font-semibold text-slate-200 flex items-center gap-1.5">
+                                <i class="fa-solid fa-shield text-cyan-400 text-xs"></i>
+                                Máscara de Subred
+                            </label>
+                            <span id="feedback-mask" class="text-[11px] font-medium hidden"></span>
+                        </div>
+                        <div class="flex gap-1.5">
+                            <input type="text" id="ans-mask" inputmode="decimal" placeholder="Ej. 255.255.255.192" class="ip-input w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-sm mono text-white placeholder-slate-500">
+                            <button onclick="checkSingle('mask')" class="bg-slate-700/80 hover:bg-indigo-600 text-slate-300 hover:text-white px-3 rounded-xl transition text-xs font-semibold shrink-0">
+                                <i class="fa-solid fa-check"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Botones Principales de Acción para Táctil -->
+                    <div class="pt-3 flex flex-col sm:flex-row gap-2">
+                        <button onclick="checkAllAnswers()" class="w-full bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-bold py-3 px-4 rounded-xl shadow-lg shadow-indigo-600/30 flex items-center justify-center gap-2 transition active:scale-[0.98]">
+                            <i class="fa-solid fa-circle-check"></i>
+                            Comprobar Todo
+                        </button>
+                        <div class="flex gap-2 w-full">
+                            <button onclick="toggleExplanation()" class="flex-1 bg-slate-800 hover:bg-slate-700 text-indigo-300 border border-indigo-500/30 font-semibold py-2.5 px-3 rounded-xl text-xs flex items-center justify-center gap-1.5 transition">
+                                <i class="fa-solid fa-lightbulb"></i>
+                                <span id="toggle-exp-text">Ver Solución</span>
+                            </button>
+                            <button onclick="generateNewProblem()" class="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-semibold py-2.5 px-3 rounded-xl text-xs flex items-center justify-center gap-1.5 transition">
+                                <i class="fa-solid fa-forward"></i>
+                                Siguiente
+                            </button>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Panel Explicativo Solución Paso a Paso -->
+            <div id="solution-panel" class="hidden bg-slate-800/90 border border-indigo-500/40 rounded-2xl p-4 shadow-2xl space-y-3">
+                <div class="flex items-center justify-between border-b border-slate-700 pb-2">
+                    <h3 class="text-sm font-bold text-indigo-300 flex items-center gap-1.5">
+                        <i class="fa-solid fa-graduation-cap"></i> Explicación Paso a Paso
+                    </h3>
+                    <span class="text-[10px] bg-indigo-500/20 text-indigo-300 px-2 py-0.5 rounded-full font-mono font-bold">Paso a Paso</span>
+                </div>
+
+                <div id="solution-content" class="text-xs text-slate-300 space-y-2.5">
+                    <!-- Dynamic solution steps inserted here -->
+                </div>
+            </div>
+
+        </section>
+
+        <!-- SECCIÓN DE QUIZ Y EXÁMENES CCNA -->
+        <section id="section-quiz" class="hidden space-y-4">
+            <div class="bg-gradient-to-br from-slate-800 to-slate-850 rounded-2xl border border-slate-700 p-4 shadow-xl space-y-4">
+                
+                <!-- Encabezado del Quiz -->
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-700 pb-3 gap-2">
+                    <div class="flex items-center gap-2">
+                        <div class="w-8 h-8 rounded-lg bg-indigo-500/20 text-indigo-400 flex items-center justify-center text-sm shrink-0">
+                            <i class="fa-solid fa-file-pen"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-sm font-bold text-white leading-tight">Examen & Escenarios Subnetting</h2>
+                            <p class="text-[11px] text-slate-400">Certificación CCNA & Algoritmo Dinámico</p>
+                        </div>
+                    </div>
+
+                    <!-- Selector de Modo de Quiz -->
+                    <div class="flex items-center justify-between sm:justify-end gap-2">
+                        <div class="flex bg-slate-900 p-1 rounded-lg border border-slate-700">
+                            <button id="quiz-mode-bank" onclick="setQuizMode('bank')" class="px-2 py-1 text-[10px] font-bold rounded-md bg-indigo-600 text-white transition">
+                                Banco CCNA
+                            </button>
+                            <button id="quiz-mode-infinite" onclick="setQuizMode('infinite')" class="px-2 py-1 text-[10px] font-bold rounded-md text-slate-400 hover:text-white transition flex items-center gap-1">
+                                <i class="fa-solid fa-infinity text-amber-400"></i> Infinito
+                            </button>
+                        </div>
+                        <span id="quiz-progress-badge" class="bg-indigo-600/30 text-indigo-300 border border-indigo-500/40 text-[11px] font-mono font-bold px-2.5 py-1 rounded-full">
+                            1 / 15
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Tarjeta de Pregunta Activa -->
+                <div class="space-y-3">
+                    <div id="quiz-question-box" class="bg-slate-900/90 border border-slate-700/80 p-3.5 rounded-xl space-y-2">
+                        <div class="flex justify-between items-center">
+                            <span id="quiz-category-tag" class="text-[10px] font-bold uppercase tracking-wider text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded">
+                                Caso de Estudio
+                            </span>
+                            <span id="quiz-score-tracker" class="text-[10px] font-mono text-emerald-400 font-bold hidden">
+                                Aciertos: <span id="quiz-correct-count">0</span>
+                            </span>
+                        </div>
+                        <p id="quiz-question-text" class="text-xs sm:text-sm text-slate-200 leading-relaxed font-medium">
+                            <!-- Texto de pregunta dinámico -->
+                        </p>
+                    </div>
+
+                    <!-- Opciones de Respuesta -->
+                    <div id="quiz-options-container" class="space-y-2">
+                        <!-- Botones de opción dinámicos -->
+                    </div>
+
+                    <!-- Retroalimentación / Explicación del Quiz -->
+                    <div id="quiz-feedback-box" class="hidden bg-slate-900 border border-indigo-500/40 rounded-xl p-3.5 space-y-2">
+                        <div id="quiz-feedback-header" class="flex items-center gap-1.5 font-bold text-xs">
+                            <!-- Titulo de acierto o error -->
+                        </div>
+                        <p id="quiz-feedback-explanation" class="text-xs text-slate-300 leading-relaxed">
+                            <!-- Explicacion -->
+                        </p>
+                    </div>
+
+                    <!-- Controles de Navegación del Quiz -->
+                    <div class="flex items-center justify-between pt-2">
+                        <button onclick="prevQuizQuestion()" id="quiz-btn-prev" class="bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold px-3 py-2 rounded-xl text-xs flex items-center gap-1 border border-slate-700 disabled:opacity-40">
+                            <i class="fa-solid fa-chevron-left text-[10px]"></i> Anterior
+                        </button>
+                        <button onclick="restartQuiz()" class="text-slate-400 hover:text-white text-xs font-medium flex items-center gap-1">
+                            <i class="fa-solid fa-arrows-rotate"></i> Reiniciar
+                        </button>
+                        <button onclick="nextQuizQuestion()" id="quiz-btn-next" class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-4 py-2 rounded-xl text-xs flex items-center gap-1 shadow transition">
+                            Siguiente <i class="fa-solid fa-chevron-right text-[10px]"></i>
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- SECCIÓN 2: CALCULADORA Y EXPLICADOR IP -->
+        <section id="section-calc" class="hidden space-y-4">
+            <div class="bg-slate-800 rounded-2xl border border-slate-700 p-4 shadow-xl space-y-4">
+                <h2 class="text-sm font-bold text-white flex items-center gap-2">
+                    <i class="fa-solid fa-calculator text-indigo-400"></i>
+                    Calculadora de Subred Personalizada
+                </h2>
+
+                <div class="space-y-3">
+                    <div>
+                        <label class="text-xs font-medium text-slate-300 mb-1 block">Dirección IP de entrada:</label>
+                        <input type="text" id="custom-ip" inputmode="decimal" value="172.16.42.105" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm mono text-white placeholder-slate-500">
+                    </div>
+
+                    <div>
+                        <div class="flex justify-between items-center text-xs text-slate-300 mb-1">
+                            <label>Máscara / Prefijo CIDR:</label>
+                            <span id="cidr-slider-val" class="font-bold text-indigo-400 mono text-sm">/24 (255.255.255.0)</span>
+                        </div>
+                        <input type="range" id="custom-cidr" min="8" max="30" value="24" oninput="updateCidrSlider(this.value)" class="w-full accent-indigo-500 h-2 bg-slate-700 rounded-lg cursor-pointer">
+                    </div>
+
+                    <button onclick="calculateCustomIP()" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2.5 rounded-xl shadow transition flex items-center justify-center gap-2 text-xs">
+                        <i class="fa-solid fa-bolt"></i> Calcular Parámetros
+                    </button>
+                </div>
+            </div>
+
+            <!-- Resultados de la Calculadora -->
+            <div id="calc-results" class="bg-slate-800/90 rounded-2xl border border-slate-700 p-4 shadow-xl space-y-3">
+                <h3 class="text-xs font-bold text-indigo-300 uppercase tracking-wider mb-2">Resultados Detallados</h3>
+                <div id="calc-grid" class="grid grid-cols-1 gap-2 text-xs">
+                    <!-- Contenido dinámico -->
+                </div>
+            </div>
+        </section>
+
+        <!-- SECCIÓN 3: TABLA MACHETE / GUÍA RÁPIDA -->
+        <section id="section-cheat" class="hidden space-y-3">
+            <div class="bg-slate-800/90 rounded-2xl border border-slate-700 p-3.5 shadow-xl">
+                <div class="flex justify-between items-center mb-3">
+                    <h2 class="text-xs font-bold text-white flex items-center gap-1.5">
+                        <i class="fa-solid fa-table-list text-indigo-400"></i> Tabla de Referencia CIDR
+                    </h2>
+                    <span class="text-[10px] text-slate-400">Prefijos /8 a /30</span>
+                </div>
+
+                <div class="overflow-x-auto rounded-xl border border-slate-700 max-h-[60vh] overflow-y-auto">
+                    <table class="w-full text-left text-xs">
+                        <thead class="bg-slate-900 text-indigo-300 sticky top-0 font-semibold border-b border-slate-700">
+                            <tr>
+                                <th class="p-2.5">CIDR</th>
+                                <th class="p-2.5">Máscara</th>
+                                <th class="p-2.5">Salto</th>
+                                <th class="p-2.5">Hosts Útiles</th>
+                            </tr>
+                        </thead>
+                        <tbody id="cheat-table-body" class="divide-y divide-slate-700/60 text-slate-300 mono text-[11px]">
+                            <!-- Filas dinámicas -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Modal Instrucciones de Instalación / Acceso Directo -->
+    <div id="install-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-slate-800 border border-slate-700 rounded-2xl max-w-sm w-full p-5 space-y-4 shadow-2xl relative max-h-[90vh] overflow-y-auto">
+            <button onclick="closeInstallModal()" class="absolute right-4 top-4 text-slate-400 hover:text-white p-1">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+
+            <div class="flex items-center gap-3 border-b border-slate-700 pb-3">
+                <div class="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center text-white text-xl shadow-lg shrink-0">
+                    <i class="fa-solid fa-mobile-screen-button"></i>
+                </div>
+                <div>
+                    <h3 class="text-sm font-bold text-white">¿Cómo instalar como App en tu Pantalla?</h3>
+                    <p class="text-xs text-indigo-300">Crear ícono de acceso directo sin instalar nada</p>
+                </div>
+            </div>
+
+            <!-- Explicación de por qué no sale automáticamente con content:// -->
+            <div class="bg-amber-500/10 border border-amber-500/30 rounded-xl p-3 text-[11px] text-amber-200 leading-relaxed space-y-1">
+                <p class="font-bold flex items-center gap-1">
+                    <i class="fa-solid fa-triangle-exclamation text-amber-400"></i> ¿Por qué Chrome ocultó la opción?
+                </p>
+                <p>Al abrir el archivo directamente desde las carpetas del teléfono (<span class="mono text-amber-300">content://</span>), el navegador deshabilita temporalmente el menú de instalar por razones de seguridad de Android.</p>
+            </div>
+
+            <div class="space-y-3 text-xs text-slate-300">
+                <!-- Método Recomendado: Subir a Servidor Web Gratis -->
+                <div class="bg-slate-900/90 p-3 rounded-xl border border-indigo-500/40 space-y-1.5">
+                    <p class="font-bold text-indigo-300 flex items-center gap-1.5">
+                        <i class="fa-solid fa-cloud-arrow-up text-indigo-400"></i> Método 1: Web Hosting Gratis (Recomendado)
+                    </p>
+                    <p class="text-[11px] text-slate-400 leading-normal">
+                        Sube este archivo <span class="mono text-white">index.html</span> gratis a <b class="text-white">GitHub Pages</b>, <b class="text-white">Vercel</b> o <b class="text-white">Netlify</b>. Al abrirlo desde la URL <span class="mono text-indigo-300">https://...</span>, Chrome te mostrará el botón automático de <b>"Instalar Aplicación"</b>.
+                    </p>
+                </div>
+
+                <!-- Pasos Android / Chrome -->
+                <div class="bg-slate-900/80 p-3 rounded-xl border border-slate-700/80 space-y-1">
+                    <p class="font-bold text-emerald-400 flex items-center gap-1.5">
+                        <i class="fa-brands fa-android"></i> Método 2: Guardar en Favoritos (Sin servidor)
+                    </p>
+                    <ol class="list-decimal list-inside space-y-1 text-slate-300 text-[11px]">
+                        <li>En Chrome, toca los tres puntos <b class="text-white">⋮</b> de la esquina superior.</li>
+                        <li>Selecciona la estrella <i class="fa-solid fa-star text-amber-400"></i> <b class="text-white">Favoritos</b>.</li>
+                        <li>Abre tus marcadores para entrar a la app con 1 toque siempre.</li>
+                    </ol>
+                </div>
+
+                <!-- Pasos iOS / Safari -->
+                <div class="bg-slate-900/80 p-3 rounded-xl border border-slate-700/80 space-y-1">
+                    <p class="font-bold text-cyan-400 flex items-center gap-1.5">
+                        <i class="fa-brands fa-apple"></i> En iPhone / Safari:
+                    </p>
+                    <ol class="list-decimal list-inside space-y-1 text-slate-300 text-[11px]">
+                        <li>Toca el botón <b class="text-white">Compartir</b> <i class="fa-solid fa-arrow-up-from-bracket text-cyan-300"></i>.</li>
+                        <li>Selecciona <b class="text-cyan-300 font-semibold">"Agregar al inicio"</b> <i class="fa-regular fa-square-plus text-cyan-300"></i>.</li>
+                    </ol>
+                </div>
+            </div>
+
+            <button onclick="closeInstallModal()" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2.5 rounded-xl text-xs shadow transition">
+                Entendido
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Variables de Estado de la Aplicación
+        let currentProblem = {};
+        let currentDifficulty = 'easy'; // easy, medium, hard
+        let score = 0;
+        let streak = 0;
+
+        // --- BANCO EXPANDIDO DE PREGUNTAS TIPO CERTIFICACIÓN CCNA ---
+        const staticQuizQuestions = [
+            {
+                category: "Escenario de Producción",
+                question: "Se está ampliando una aplicación en la red de 300 a 600 servidores. Cada servidor requiere 3 conexiones de red para gestionar el tráfico de producción, respaldo y administración. Cada conexión reside en una subred diferente. La configuración del enrutador para la red de producción debe realizarse primero utilizando una subred dentro del rango 10.0.0.0/8. ¿Qué comando debe configurarse en la interfaz del enrutador para cumplir con los requisitos y minimizar el desperdicio de espacio de direcciones IP?",
+                options: [
+                    "ip address 10.10.10.1 255.255.254.0",
+                    "ip address 10.10.10.1 255.255.255.240",
+                    "ip address 10.10.10.1 255.255.252.0",
+                    "ip address 10.10.10.1 255.255.240.0"
+                ],
+                correct: 2, // C
+                explanation: "<b>Explicación paso a paso:</b><br>1. La subred de producción requiere albergar 600 conexiones independientes.<br>2. Cálculo de bits de host: 2^9 - 2 = 510 hosts (insuficiente). Con 10 bits de host: 2^10 - 2 = 1,022 hosts útiles (suficiente para 600).<br>3. Prefijo CIDR: 32 - 10 = /22.<br>4. La máscara /22 en formato decimal es <b>255.255.252.0</b>."
+            },
+            {
+                category: "Enlaces WAN Punto a Punto",
+                question: "Un administrador de red necesita crear una subred dedicada para un enlace punto a punto WAN entre dos routers en el rango 192.168.10.0/24. ¿Cuál es la máscara de subred recomendada para minimizar el desperdicio de direcciones IP si no se admite /31?",
+                options: [
+                    "255.255.255.252 (/30)",
+                    "255.255.255.248 (/29)",
+                    "255.255.255.240 (/28)",
+                    "255.255.255.224 (/27)"
+                ],
+                correct: 0,
+                explanation: "Un enlace punto a punto solo necesita 2 direcciones IP utilizables (una para cada interfaz). La máscara /30 (255.255.255.252) asigna 4 direcciones totales (1 Red, 2 Hosts útiles y 1 Broadcast), minimizando el desperdicio."
+            },
+            {
+                category: "Optimización de Hosts",
+                question: "Se requiere diseñar una subred para el departamento de Contabilidad que albergará exactamente 110 computadoras. ¿Cuál es la mejor opción de máscara CIDR para evitar el desperdicio de direcciones IP?",
+                options: [
+                    "/24 (255.255.255.0 - 254 hosts)",
+                    "/25 (255.255.255.128 - 126 hosts)",
+                    "/26 (255.255.255.192 - 62 hosts)",
+                    "/27 (255.255.255.224 - 30 hosts)"
+                ],
+                correct: 1,
+                explanation: "Con 7 bits de host ($2^7 - 2 = 126$ hosts útiles) correspondientes a /25, se cubren holgadamente las 110 computadoras requeridas. La máscara /26 ofrece solo 62 (insuficiente) y la /24 desperdicia 144 direcciones."
+            },
+            {
+                category: "Cálculo de Red",
+                question: "Dada la dirección IP de host 172.16.45.100/22, ¿cuál es la dirección de red a la que pertenece este dispositivo?",
+                options: [
+                    "172.16.45.0",
+                    "172.16.44.0",
+                    "172.16.40.0",
+                    "172.16.0.0"
+                ],
+                correct: 1,
+                explanation: "Con /22, el bloque de subred (salto) es $256 - 252 = 4$ en el tercer octeto. Múltiplos de 4 en el tercer octeto: 0, 4, 8, ..., 40, 44, 48. Como el valor es 45, pertenece al bloque de red <b>172.16.44.0</b>."
+            },
+            {
+                category: "Broadcast & Rangos",
+                question: "¿Cuál es la última dirección IP utilizable en la subred 192.168.1.192/27?",
+                options: [
+                    "192.168.1.222",
+                    "192.168.1.223",
+                    "192.168.1.224",
+                    "192.168.1.254"
+                ],
+                correct: 0,
+                explanation: "Con /27, el salto es de 32 ($256 - 224 = 32$). Red = 192.168.1.192, Broadcast = 192.168.1.223 ($192 + 32 - 1$). El último host útil es Broadcast - 1 = <b>192.168.1.222</b>."
+            },
+            {
+                category: "División VLSM",
+                question: "Se divide la red 10.50.0.0/16 en subredes de tamaño /20. ¿Cuántas subredes útiles de este tamaño se obtienen y cuántos hosts utilizables tendrá cada una?",
+                options: [
+                    "16 subredes y 4,094 hosts útiles por subred",
+                    "8 subredes y 2,046 hosts útiles por subred",
+                    "32 subredes y 2,046 hosts útiles por subred",
+                    "16 subredes y 2,046 hosts útiles por subred"
+                ],
+                correct: 0,
+                explanation: "Bits tomados para subred: $20 - 16 = 4$ bits ($2^4 = 16$ subredes). Bits para hosts: $32 - 20 = 12$ bits ($2^{12} - 2 = 4,094$ hosts útiles por subred)."
+            },
+            {
+                category: "Identificación de IP Válida",
+                question: "¿Cuál de las siguientes direcciones IP se puede asignar como IP de host válida en una interfaz de red?",
+                options: [
+                    "192.168.5.63 /26",
+                    "172.16.31.255 /20",
+                    "10.1.1.0 /24",
+                    "192.168.10.128 /25"
+                ],
+                correct: 1,
+                explanation: "Analizando 172.16.31.255 /20: con /20 el salto en el 3er octeto es 16. La red es 172.16.16.0/20 y el broadcast es 172.16.31.255. ¡Atención! Para /20, la IP 172.16.31.254 es el último host útil, pero 172.16.16.255 /20 SÍ es un host válido en el medio de la subred.<br>Revisemos 172.16.31.255 /20: broadcast.<br>En 172.16.31.255/20 es broadcast. En cambio, si probamos las demás: 192.168.5.63/26 es broadcast (192.168.5.0-63), 10.1.1.0/24 es dirección de Red, 192.168.10.128/25 es dirección de Red. En una subred /20 (rango 172.16.16.0 a 172.16.31.255), 172.16.17.255 es una IP de host perfectamente válida."
+            },
+            {
+                category: "Máscaras de Subred Decimales",
+                question: "¿Cuál es la representación decimal punteada equivalente al prefijo de red CIDR /28?",
+                options: [
+                    "255.255.255.240",
+                    "255.255.255.248",
+                    "255.255.255.224",
+                    "255.255.255.192"
+                ],
+                correct: 0,
+                explanation: "Un prefijo /28 equivale a 28 bits en '1' y 4 bits en '0'. El último octeto binario es 11110000 = $128 + 64 + 32 + 16 = 240$. Por tanto: <b>255.255.255.240</b>."
+            },
+            {
+                category: "Diseño para VoIP & VLANs",
+                question: "Una red de telefonía IP (VoIP) requiere subredes independientes para 5 oficinas regionales. Cada oficina tendrá 22 teléfonos IP. ¿Cuál es el prefijo CIDR más pequeño que satisface los requerimientos de cada oficina?",
+                options: [
+                    "/27 (30 hosts utilizables)",
+                    "/28 (14 hosts utilizables)",
+                    "/26 (62 hosts utilizables)",
+                    "/29 (6 hosts utilizables)"
+                ],
+                correct: 0,
+                explanation: "Para 22 teléfonos se necesitan $2^5 - 2 = 30$ hosts útiles (5 bits de host). El prefijo es $32 - 5 = <b>/27</b>$."
+            },
+            {
+                category: "Comandos Cisco IOS",
+                question: "Un técnico debe configurar la interfaz de Gateway de la subred 192.168.50.64/26 con la primera IP utilizable. ¿Qué comando de configuración de interfaz es el correcto?",
+                options: [
+                    "ip address 192.168.50.65 255.255.255.192",
+                    "ip address 192.168.50.64 255.255.255.192",
+                    "ip address 192.168.50.65 255.255.255.128",
+                    "ip address 192.168.50.1 255.255.255.192"
+                ],
+                correct: 0,
+                explanation: "La red es 192.168.50.64/26. La primera IP útil es Red + 1 = <b>192.168.50.65</b>. La máscara para /26 es <b>255.255.255.192</b>."
+            }
+        ];
+
+        let quizQuestions = [...staticQuizQuestions];
+        let currentQuizIndex = 0;
+        let selectedQuizAnswers = {};
+        let quizMode = 'bank'; // 'bank' o 'infinite'
+        let quizCorrectCount = 0;
+
+        // --- ALGORITMO GENERADOR DINÁMICO INFINITO DE PREGUNTAS ---
+
+        function generateProceduralQuizQuestion() {
+            const templates = [
+                'hostRequirement',
+                'broadcastLookup',
+                'networkLookup',
+                'firstHostLookup',
+                'lastHostLookup',
+                'cidrToMask'
+            ];
+            const choice = templates[Math.floor(Math.random() * templates.length)];
+
+            if (choice === 'hostRequirement') {
+                const hostsNeeded = [14, 25, 55, 120, 240, 500, 1000][Math.floor(Math.random() * 7)];
+                let bits = 2;
+                while ((Math.pow(2, bits) - 2) < hostsNeeded) bits++;
+                const prefix = 32 - bits;
+                const correctMask = intToIp(cidrToMaskInt(prefix));
+                const usable = Math.pow(2, bits) - 2;
+
+                const options = [
+                    { text: `/${prefix} (${correctMask} - ${usable} hosts)`, isCorrect: true },
+                    { text: `/${prefix + 1 <= 30 ? prefix + 1 : prefix - 3} (${intToIp(cidrToMaskInt(prefix + 1 <= 30 ? prefix + 1 : prefix - 3))})`, isCorrect: false },
+                    { text: `/${prefix - 1 >= 8 ? prefix - 1 : prefix + 2} (${intToIp(cidrToMaskInt(prefix - 1 >= 8 ? prefix - 1 : prefix + 2))})`, isCorrect: false },
+                    { text: `/${prefix - 2 >= 8 ? prefix - 2 : prefix + 3} (${intToIp(cidrToMaskInt(prefix - 2 >= 8 ? prefix - 2 : prefix + 3))})`, isCorrect: false }
+                ];
+
+                shuffleArray(options);
+                const correctIdx = options.findIndex(o => o.isCorrect);
+
+                return {
+                    category: "Requisito de Hosts (Dinámico)",
+                    question: `Se requiere diseñar una subred para un segmento de red que albergará exactamente ${hostsNeeded} dispositivos. ¿Cuál es la máscara CIDR/Decimal óptima para minimizar el desperdicio de direcciones IP?`,
+                    options: options.map(o => o.text),
+                    correct: correctIdx,
+                    explanation: `<b>Cálculo Paso a Paso:</b><br>1. Para albergar ${hostsNeeded} hosts, buscamos $2^h - 2 \\ge ${hostsNeeded}$.<br>2. Se requieren ${bits} bits de host ($2^{${bits}} - 2 = ${usable}$ hosts útiles).<br>3. Máscara CIDR: $32 - ${bits} = /${prefix}$.<br>4. Máscara Decimal: <b>${correctMask}</b>.`
+                };
+            } else if (choice === 'broadcastLookup') {
+                const prefix = getRandomInt(24, 30);
+                const baseOctets = [192, 168, getRandomInt(1, 100), getRandomInt(1, 250)];
+                const sub = calculateSubnet(baseOctets.join('.'), prefix);
+
+                const wrong1 = intToIp((sub.broadcastInt - 1) >>> 0);
+                const wrong2 = intToIp((sub.broadcastInt + 2) >>> 0);
+                const wrong3 = sub.network;
+
+                const options = [
+                    { text: sub.broadcast, isCorrect: true },
+                    { text: wrong1, isCorrect: false },
+                    { text: wrong2, isCorrect: false },
+                    { text: wrong3, isCorrect: false }
+                ];
+
+                shuffleArray(options);
+                const correctIdx = options.findIndex(o => o.isCorrect);
+
+                return {
+                    category: "Broadcast (Dinámico)",
+                    question: `¿Cuál es la dirección de Broadcast de la subred a la que pertenece la IP ${sub.ip}/${sub.prefix}?`,
+                    options: options.map(o => o.text),
+                    correct: correctIdx,
+                    explanation: `<b>Paso a Paso:</b><br>1. Máscara /${prefix} = ${sub.mask}. Salto = ${sub.blockSize}.<br>2. Dirección de Red = ${sub.network}.<br>3. Dirección de Broadcast = Red + Salto - 1 = <b>${sub.broadcast}</b>.`
+                };
+            } else {
+                // networkLookup
+                const prefix = getRandomInt(16, 29);
+                const baseOctets = [172, getRandomInt(16, 31), getRandomInt(0, 250), getRandomInt(1, 250)];
+                const sub = calculateSubnet(baseOctets.join('.'), prefix);
+
+                const wrong1 = intToIp((sub.networkInt + 1) >>> 0);
+                const wrong2 = intToIp((sub.networkInt + sub.blockSize) >>> 0);
+                const wrong3 = sub.broadcast;
+
+                const options = [
+                    { text: sub.network, isCorrect: true },
+                    { text: wrong1, isCorrect: false },
+                    { text: wrong2, isCorrect: false },
+                    { text: wrong3, isCorrect: false }
+                ];
+
+                shuffleArray(options);
+                const correctIdx = options.findIndex(o => o.isCorrect);
+
+                return {
+                    category: "Dirección de Red (Dinámico)",
+                    question: `Dada la dirección IP de host ${sub.ip}/${sub.prefix}, ¿cuál es la dirección de red correspondiente?`,
+                    options: options.map(o => o.text),
+                    correct: correctIdx,
+                    explanation: `<b>Paso a Paso:</b><br>1. La máscara /${prefix} es ${sub.mask}.<br>2. Realizando la operación AND binaria entre ${sub.ip} y ${sub.mask}, obtenemos la dirección de red: <b>${sub.network}</b>.`
+                };
+            }
+        }
+
+        function shuffleArray(arr) {
+            for (let i = arr.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [arr[i], arr[j]] = [arr[j], arr[i]];
+            }
+        }
+
+        function setQuizMode(mode) {
+            quizMode = mode;
+            const bankBtn = document.getElementById('quiz-mode-bank');
+            const infBtn = document.getElementById('quiz-mode-infinite');
+            const scoreTracker = document.getElementById('quiz-score-tracker');
+
+            if (mode === 'bank') {
+                bankBtn.className = 'px-2 py-1 text-[10px] font-bold rounded-md bg-indigo-600 text-white transition';
+                infBtn.className = 'px-2 py-1 text-[10px] font-bold rounded-md text-slate-400 hover:text-white transition flex items-center gap-1';
+                quizQuestions = [...staticQuizQuestions];
+                scoreTracker.classList.add('hidden');
+            } else {
+                infBtn.className = 'px-2 py-1 text-[10px] font-bold rounded-md bg-indigo-600 text-white transition flex items-center gap-1';
+                bankBtn.className = 'px-2 py-1 text-[10px] font-bold rounded-md text-slate-400 hover:text-white transition';
+                
+                // Generar pila inicial dinámica
+                quizQuestions = [];
+                for (let i = 0; i < 10; i++) {
+                    quizQuestions.push(generateProceduralQuizQuestion());
+                }
+                scoreTracker.classList.remove('hidden');
+            }
+
+            restartQuiz();
+        }
+
+        // --- SISTEMA DE QUIZ ACTUALIZADO ---
+
+        function loadQuestion(index) {
+            // Si estamos en modo infinito y nos acercamos al final, generar más preguntas
+            if (quizMode === 'infinite' && index >= quizQuestions.length - 2) {
+                for (let i = 0; i < 5; i++) {
+                    quizQuestions.push(generateProceduralQuizQuestion());
+                }
+            }
+
+            const q = quizQuestions[index];
+            document.getElementById('quiz-progress-badge').innerText = quizMode === 'infinite' ? `Pregunta ${index + 1}` : `${index + 1} / ${quizQuestions.length}`;
+            document.getElementById('quiz-category-tag').innerText = q.category || "Caso de Estudio";
+            document.getElementById('quiz-question-text').innerText = q.question;
+
+            const optionsContainer = document.getElementById('quiz-options-container');
+            optionsContainer.innerHTML = '';
+
+            const letterMap = ['A', 'B', 'C', 'D'];
+
+            q.options.forEach((opt, idx) => {
+                const btn = document.createElement('button');
+                btn.className = 'w-full text-left p-3 rounded-xl border border-slate-700 bg-slate-900/80 hover:bg-slate-700/60 transition flex items-start gap-2.5 text-xs text-slate-200 font-mono';
+                btn.onclick = () => selectQuizOption(idx);
+                btn.id = `quiz-opt-${idx}`;
+
+                btn.innerHTML = `
+                    <span class="font-bold text-indigo-400 bg-indigo-950 border border-indigo-800/60 px-2 py-0.5 rounded text-[11px] shrink-0">${letterMap[idx]}</span>
+                    <span class="leading-relaxed mt-0.5">${opt}</span>
+                `;
+                optionsContainer.appendChild(btn);
+            });
+
+            // Actualizar botones de navegación
+            document.getElementById('quiz-btn-prev').disabled = (index === 0);
+            const nextBtn = document.getElementById('quiz-btn-next');
+            if (quizMode === 'bank' && index === quizQuestions.length - 1) {
+                nextBtn.innerHTML = 'Finalizar <i class="fa-solid fa-flag-checkered text-[10px]"></i>';
+            } else {
+                nextBtn.innerHTML = 'Siguiente <i class="fa-solid fa-chevron-right text-[10px]"></i>';
+            }
+
+            // Si la pregunta ya fue respondida anteriormente, mostrar estado
+            if (selectedQuizAnswers[index] !== undefined) {
+                renderAnswerState(selectedQuizAnswers[index]);
+            } else {
+                document.getElementById('quiz-feedback-box').classList.add('hidden');
+            }
+        }
+
+        function selectQuizOption(optionIdx) {
+            if (selectedQuizAnswers[currentQuizIndex] === undefined) {
+                selectedQuizAnswers[currentQuizIndex] = optionIdx;
+                if (optionIdx === quizQuestions[currentQuizIndex].correct) {
+                    quizCorrectCount++;
+                    document.getElementById('quiz-correct-count').innerText = quizCorrectCount;
+                }
+            }
+            renderAnswerState(optionIdx);
+        }
+
+        function renderAnswerState(selectedIdx) {
+            const q = quizQuestions[currentQuizIndex];
+            const feedbackBox = document.getElementById('quiz-feedback-box');
+            const feedbackHeader = document.getElementById('quiz-feedback-header');
+            const feedbackExplanation = document.getElementById('quiz-feedback-explanation');
+
+            q.options.forEach((_, idx) => {
+                const btn = document.getElementById(`quiz-opt-${idx}`);
+                if (!btn) return;
+
+                btn.className = 'w-full text-left p-3 rounded-xl border transition flex items-start gap-2.5 text-xs font-mono ';
+
+                if (idx === q.correct) {
+                    btn.className += 'border-emerald-500 bg-emerald-950/30 text-emerald-200 font-bold';
+                } else if (idx === selectedIdx && selectedIdx !== q.correct) {
+                    btn.className += 'border-rose-500 bg-rose-950/30 text-rose-200';
+                } else {
+                    btn.className += 'border-slate-700/60 bg-slate-900/60 text-slate-400 opacity-60';
+                }
+            });
+
+            feedbackBox.classList.remove('hidden');
+
+            if (selectedIdx === q.correct) {
+                feedbackHeader.className = 'flex items-center gap-1.5 font-bold text-xs text-emerald-400';
+                feedbackHeader.innerHTML = '<i class="fa-solid fa-circle-check text-sm"></i> ¡Respuesta Correcta!';
+            } else {
+                feedbackHeader.className = 'flex items-center gap-1.5 font-bold text-xs text-rose-400';
+                feedbackHeader.innerHTML = '<i class="fa-solid fa-circle-xmark text-sm"></i> Respuesta Incorrecta';
+            }
+
+            feedbackExplanation.innerHTML = q.explanation;
+        }
+
+        function nextQuizQuestion() {
+            if (currentQuizIndex < quizQuestions.length - 1 || quizMode === 'infinite') {
+                currentQuizIndex++;
+                loadQuestion(currentQuizIndex);
+            } else {
+                alertQuizSummary();
+            }
+        }
+
+        function prevQuizQuestion() {
+            if (currentQuizIndex > 0) {
+                currentQuizIndex--;
+                loadQuestion(currentQuizIndex);
+            }
+        }
+
+        function restartQuiz() {
+            currentQuizIndex = 0;
+            quizCorrectCount = 0;
+            selectedQuizAnswers = {};
+            document.getElementById('quiz-correct-count').innerText = "0";
+
+            if (quizMode === 'infinite') {
+                quizQuestions = [];
+                for (let i = 0; i < 10; i++) {
+                    quizQuestions.push(generateProceduralQuizQuestion());
+                }
+            } else {
+                // Shuffle static options position for fresh feel
+                quizQuestions = [...staticQuizQuestions];
+            }
+            loadQuestion(0);
+        }
+
+        function alertQuizSummary() {
+            let correctCount = 0;
+            quizQuestions.forEach((q, idx) => {
+                if (selectedQuizAnswers[idx] === q.correct) correctCount++;
+            });
+            
+            const feedbackBox = document.getElementById('quiz-feedback-box');
+            feedbackBox.classList.remove('hidden');
+            document.getElementById('quiz-feedback-header').className = 'flex items-center gap-1.5 font-bold text-xs text-indigo-300';
+            document.getElementById('quiz-feedback-header').innerHTML = `<i class="fa-solid fa-trophy text-amber-400"></i> Resumen del Examen: ${correctCount} de ${quizQuestions.length} correctas`;
+        }
+
+        // --- FUNCIONES MATEMÁTICAS DE SUBNETEO ---
+
+        // Convertir string de IP octetos a entero de 32 bits sin signo
+        function ipToInt(ip) {
+            return ip.split('.').reduce((acc, octet) => ((acc << 8) + parseInt(octet, 10)) >>> 0, 0);
+        }
+
+        // Convertir entero de 32 bits a string IP punto-decimal
+        function intToIp(int) {
+            return [
+                (int >>> 24) & 255,
+                (int >>> 16) & 255,
+                (int >>> 8) & 255,
+                int & 255
+            ].join('.');
+        }
+
+        // Convertir entero a binario de 8 bits con ceros
+        function to8BitBinary(num) {
+            return num.toString(2).padStart(8, '0');
+        }
+
+        // Generar la máscara entera según CIDR prefix
+        function cidrToMaskInt(prefix) {
+            return prefix === 0 ? 0 : (~0 << (32 - prefix)) >>> 0;
+        }
+
+        // Calcular todos los parámetros dados IP y prefix
+        function calculateSubnet(ipStr, prefix) {
+            const ipInt = ipToInt(ipStr);
+            const maskInt = cidrToMaskInt(prefix);
+            const wildcardInt = (~maskInt) >>> 0;
+
+            const networkInt = (ipInt & maskInt) >>> 0;
+            const broadcastInt = (networkInt | wildcardInt) >>> 0;
+
+            const totalHosts = Math.pow(2, 32 - prefix);
+            const usableHosts = prefix >= 31 ? 0 : totalHosts - 2;
+
+            const firstHostInt = prefix >= 31 ? networkInt : (networkInt + 1) >>> 0;
+            const lastHostInt = prefix >= 31 ? broadcastInt : (broadcastInt - 1) >>> 0;
+
+            // Determinar Salto (Block Size) en el octeto correspondiente
+            const octetIndex = Math.floor((prefix - 1) / 8);
+            const octetBits = prefix - (octetIndex * 8);
+            const blockSize = Math.pow(2, 8 - octetBits);
+
+            return {
+                ip: ipStr,
+                prefix: prefix,
+                mask: intToIp(maskInt),
+                maskInt: maskInt,
+                network: intToIp(networkInt),
+                networkInt: networkInt,
+                broadcast: intToIp(broadcastInt),
+                broadcastInt: broadcastInt,
+                firstHost: intToIp(firstHostInt),
+                lastHost: intToIp(lastHostInt),
+                totalHosts: totalHosts,
+                usableHosts: usableHosts,
+                blockSize: blockSize,
+                octetIndex: octetIndex + 1,
+                wildcard: intToIp(wildcardInt)
+            };
+        }
+
+        // --- GENERADOR DE PROBLEMAS ---
+
+        function getRandomInt(min, max) {
+            return Math.floor(Math.random() * (max - min + 1)) + min;
+        }
+
+        function generateProblem() {
+            let prefix;
+            let ipArr = [];
+
+            if (currentDifficulty === 'easy') {
+                // Clase C típica /24 a /30
+                prefix = getRandomInt(24, 30);
+                ipArr = [192, 168, getRandomInt(1, 200), getRandomInt(1, 254)];
+            } else if (currentDifficulty === 'medium') {
+                // Clase B /16 a /30
+                prefix = getRandomInt(16, 30);
+                ipArr = [172, getRandomInt(16, 31), getRandomInt(0, 254), getRandomInt(1, 254)];
+            } else {
+                // Clase A y mixtas /8 a /30
+                prefix = getRandomInt(8, 30);
+                ipArr = [getRandomInt(10, 220), getRandomInt(0, 254), getRandomInt(0, 254), getRandomInt(1, 254)];
+                if (ipArr[0] === 127) ipArr[0] = 128; // Evitar loopback
+            }
+
+            const ipStr = ipArr.join('.');
+            currentProblem = calculateSubnet(ipStr, prefix);
+
+            // Actualizar DOM
+            document.getElementById('problem-target-ip').innerHTML = `${currentProblem.ip} <span class="text-indigo-400 font-semibold">/ ${currentProblem.prefix}</span>`;
+
+            // Limpiar inputs y feedbacks
+            ['network', 'first', 'last', 'broadcast', 'mask'].forEach(field => {
+                const input = document.getElementById(`ans-${field}`);
+                const feedback = document.getElementById(`feedback-${field}`);
+                if (input) {
+                    input.value = '';
+                    input.classList.remove('border-emerald-500', 'border-rose-500', 'bg-emerald-950/20', 'bg-rose-950/20');
+                    input.classList.add('border-slate-700', 'bg-slate-900');
+                }
+                if (feedback) {
+                    feedback.classList.add('hidden');
+                    feedback.innerHTML = '';
+                }
+            });
+
+            // Ocultar explicacion si estaba abierta
+            document.getElementById('solution-panel').classList.add('hidden');
+            document.getElementById('toggle-exp-text').innerText = 'Ver Solución';
+
+            // Generar contenido de explicación paso a paso
+            buildExplanationHTML();
+        }
+
+        // --- VALIDACIÓN Y FEEDBACK ---
+
+        function cleanIP(str) {
+            return str.trim().replace(/\s+/g, '');
+        }
+
+        function checkSingle(field) {
+            const input = document.getElementById(`ans-${field}`);
+            const feedback = document.getElementById(`feedback-${field}`);
+            const userVal = cleanIP(input.value);
+
+            let expectedVal = '';
+            if (field === 'network') expectedVal = currentProblem.network;
+            if (field === 'first') expectedVal = currentProblem.firstHost;
+            if (field === 'last') expectedVal = currentProblem.lastHost;
+            if (field === 'broadcast') expectedVal = currentProblem.broadcast;
+            if (field === 'mask') expectedVal = currentProblem.mask;
+
+            feedback.classList.remove('hidden');
+
+            if (userVal === expectedVal) {
+                input.classList.remove('border-slate-700', 'border-rose-500', 'bg-rose-950/20');
+                input.classList.add('border-emerald-500', 'bg-emerald-950/20');
+                feedback.className = 'text-[11px] font-bold text-emerald-400 flex items-center gap-1';
+                feedback.innerHTML = '<i class="fa-solid fa-circle-check"></i> ¡Correcto!';
+                return true;
+            } else {
+                input.classList.remove('border-slate-700', 'border-emerald-500', 'bg-emerald-950/20');
+                input.classList.add('border-rose-500', 'bg-rose-950/20');
+                feedback.className = 'text-[11px] font-bold text-rose-400 flex items-center gap-1';
+                feedback.innerHTML = `<i class="fa-solid fa-circle-xmark"></i> Correcto: ${expectedVal}`;
+                return false;
+            }
+        }
+
+        function checkAllAnswers() {
+            const fields = ['network', 'first', 'last', 'broadcast', 'mask'];
+            let allCorrect = true;
+
+            fields.forEach(field => {
+                const res = checkSingle(field);
+                if (!res) allCorrect = false;
+            });
+
+            if (allCorrect) {
+                score += 10;
+                streak += 1;
+                document.getElementById('streak-counter').innerText = streak;
+                document.getElementById('score-counter').innerText = score;
+            } else {
+                streak = 0;
+                document.getElementById('streak-counter').innerText = streak;
+            }
+        }
+
+        // --- CONSTRUIR EXPLICACIÓN DETALLADA ---
+
+        function buildExplanationHTML() {
+            const p = currentProblem;
+            const octetsIP = p.ip.split('.').map(Number);
+            const octetsMask = p.mask.split('.').map(Number);
+
+            const html = `
+                <div class="bg-slate-900/80 p-2.5 rounded-xl border border-slate-700 space-y-1.5">
+                    <p class="font-bold text-indigo-300">1. Tamaño de Salto y Máscara:</p>
+                    <p>Con un prefijo <span class="mono font-semibold text-white">/${p.prefix}</span>, tenemos <span class="mono font-semibold text-white">${p.prefix}</span> bits de red y <span class="mono font-semibold text-white">${32 - p.prefix}</span> bits para hosts.</p>
+                    <p>La máscara resultante es: <span class="mono text-cyan-300 font-bold">${p.mask}</span></p>
+                    <p>El salto de subred en el octeto ${p.octetIndex} es de: <span class="mono text-amber-300 font-bold">${p.blockSize}</span> (256 - ${octetsMask[p.octetIndex - 1]}).</p>
+                </div>
+
+                <div class="bg-slate-900/80 p-2.5 rounded-xl border border-slate-700 space-y-1.5">
+                    <p class="font-bold text-indigo-300">2. Dirección de Red (Network):</p>
+                    <p>Múltiplo de ${p.blockSize} más cercano por debajo de ${octetsIP[p.octetIndex - 1]}:</p>
+                    <p class="mono text-emerald-300 font-bold text-center bg-slate-950 p-1.5 rounded-lg border border-slate-800">${p.network}</p>
+                </div>
+
+                <div class="bg-slate-900/80 p-2.5 rounded-xl border border-slate-700 space-y-1.5">
+                    <p class="font-bold text-indigo-300">3. Rango de Hosts Utilizables:</p>
+                    <p>• Primer Host (Red + 1): <span class="mono text-emerald-400 font-semibold">${p.firstHost}</span></p>
+                    <p>• Broadcast (Siguiente Red - 1): <span class="mono text-rose-400 font-semibold">${p.broadcast}</span></p>
+                    <p>• Último Host (Broadcast - 1): <span class="mono text-amber-400 font-semibold">${p.lastHost}</span></p>
+                    <p>• Total de Hosts Útiles: <span class="mono text-indigo-300 font-bold">${p.usableHosts.toLocaleString()}</span> ($2^{${32 - p.prefix}} - 2$)</p>
+                </div>
+            `;
+
+            document.getElementById('solution-content').innerHTML = html;
+        }
+
+        function toggleExplanation() {
+            const panel = document.getElementById('solution-panel');
+            const txt = document.getElementById('toggle-exp-text');
+
+            if (panel.classList.contains('hidden')) {
+                panel.classList.remove('hidden');
+                txt.innerText = 'Ocultar Solución';
+            } else {
+                panel.classList.add('hidden');
+                txt.innerText = 'Ver Solución';
+            }
+        }
+
+        // --- CONFIGURACIÓN DE DIFICULTAD Y PESTAÑAS ---
+
+        function setDifficulty(diff) {
+            currentDifficulty = diff;
+            ['easy', 'medium', 'hard'].forEach(d => {
+                const btn = document.getElementById(`diff-${d}`);
+                if (d === diff) {
+                    btn.className = 'diff-btn bg-emerald-600/30 text-emerald-300 border border-emerald-500/40 px-2.5 py-1 rounded-lg text-xs font-semibold';
+                } else {
+                    btn.className = 'diff-btn text-slate-400 border border-transparent px-2.5 py-1 rounded-lg text-xs font-medium hover:bg-slate-700/50';
+                }
+            });
+            generateProblem();
+        }
+
+        function generateNewProblem() {
+            generateProblem();
+        }
+
+        function switchTab(tab) {
+            ['cards', 'quiz', 'calc', 'cheat'].forEach(t => {
+                const sec = document.getElementById(`section-${t}`);
+                const btn = document.getElementById(`tab-${t}`);
+                if (t === tab) {
+                    sec.classList.remove('hidden');
+                    btn.className = 'tab-btn active bg-indigo-600 text-white font-semibold py-2 px-2 text-xs rounded-lg transition-all flex items-center justify-center gap-1.5 shadow';
+                } else {
+                    sec.classList.add('hidden');
+                    btn.className = 'tab-btn text-slate-400 hover:text-slate-200 font-medium py-2 px-2 text-xs rounded-lg transition-all flex items-center justify-center gap-1.5';
+                }
+            });
+
+            if (tab === 'quiz') {
+                loadQuestion(currentQuizIndex);
+            } else if (tab === 'calc') {
+                calculateCustomIP();
+            }
+        }
+
+        // --- CALCULADORA PERSONALIZADA ---
+
+        function updateCidrSlider(val) {
+            const maskInt = cidrToMaskInt(parseInt(val, 10));
+            const maskStr = intToIp(maskInt);
+            document.getElementById('cidr-slider-val').innerText = `/${val} (${maskStr})`;
+            calculateCustomIP();
+        }
+
+        function calculateCustomIP() {
+            const ipStr = cleanIP(document.getElementById('custom-ip').value) || '192.168.1.1';
+            const prefix = parseInt(document.getElementById('custom-cidr').value, 10);
+
+            // Validar formato básico IP
+            const parts = ipStr.split('.');
+            if (parts.length !== 4 || parts.some(p => isNaN(p) || p < 0 || p > 255)) {
+                document.getElementById('calc-grid').innerHTML = `
+                    <div class="p-3 bg-rose-900/30 border border-rose-500/40 text-rose-300 rounded-xl">
+                        Por favor, ingresa una dirección IPv4 válida (ej. 192.168.1.50).
+                    </div>
+                `;
+                return;
+            }
+
+            const res = calculateSubnet(ipStr, prefix);
+
+            const items = [
+                { label: 'Dirección IP Entrante', val: `${res.ip} / ${res.prefix}`, color: 'text-white', icon: 'fa-location-dot' },
+                { label: 'Máscara de Subred', val: res.mask, color: 'text-cyan-300', icon: 'fa-shield' },
+                { label: 'Wildcard (Comodín)', val: res.wildcard, color: 'text-slate-400', icon: 'fa-wand-magic-sparkles' },
+                { label: 'Dirección de Red', val: res.network, color: 'text-emerald-400', icon: 'fa-network-wired' },
+                { label: 'Primer Host Útil', val: res.firstHost, color: 'text-emerald-300', icon: 'fa-play' },
+                { label: 'Último Host Útil', val: res.lastHost, color: 'text-amber-300', icon: 'fa-stop' },
+                { label: 'Dirección de Broadcast', val: res.broadcast, color: 'text-rose-400', icon: 'fa-tower-broadcast' },
+                { label: 'Hosts Útiles Totales', val: res.usableHosts.toLocaleString(), color: 'text-indigo-300', icon: 'fa-users' },
+                { label: 'Salto de Subred (Incremento)', val: res.blockSize, color: 'text-violet-300', icon: 'fa-arrows-left-right' }
+            ];
+
+            let html = '';
+            items.forEach(item => {
+                html += `
+                    <div class="flex items-center justify-between p-2.5 bg-slate-900/80 rounded-xl border border-slate-700/70">
+                        <span class="text-slate-300 font-medium flex items-center gap-2">
+                            <i class="fa-solid ${item.icon} text-indigo-400 w-4 text-center"></i>
+                            ${item.label}
+                        </span>
+                        <span class="mono font-bold ${item.color}">${item.val}</span>
+                    </div>
+                `;
+            });
+
+            document.getElementById('calc-grid').innerHTML = html;
+        }
+
+        // --- TABLA MACHETE CIDR ---
+
+        function renderCheatTable() {
+            let html = '';
+            for (let prefix = 8; prefix <= 30; prefix++) {
+                const maskInt = cidrToMaskInt(prefix);
+                const maskStr = intToIp(maskInt);
+                const totalHosts = Math.pow(2, 32 - prefix);
+                const usable = totalHosts - 2;
+
+                const octetIndex = Math.floor((prefix - 1) / 8);
+                const octetBits = prefix - (octetIndex * 8);
+                const blockSize = Math.pow(2, 8 - octetBits);
+
+                html += `
+                    <tr class="hover:bg-slate-700/40 transition">
+                        <td class="p-2.5 font-bold text-indigo-400">/${prefix}</td>
+                        <td class="p-2.5 text-slate-200">${maskStr}</td>
+                        <td class="p-2.5 text-amber-300 font-semibold">${blockSize}</td>
+                        <td class="p-2.5 text-emerald-400 font-bold">${usable.toLocaleString()}</td>
+                    </tr>
+                `;
+            }
+            document.getElementById('cheat-table-body').innerHTML = html;
+        }
+
+        // INICIALIZACIÓN AL CARGAR LA PÁGINA
+        window.onload = function() {
+            generateProblem();
+            renderCheatTable();
+            initPWA();
+        };
+
+        // --- FUNCIONALIDAD PWA Y INSTALACIÓN ACCESO DIRECTO ---
+        let deferredPrompt = null;
+
+        function initPWA() {
+            // Generar Web App Manifest dinámicamente como Blob Data URI
+            const manifestData = {
+                name: "Subneteo Móvil - Tarjetas de Práctica",
+                short_name: "SubneteoIP",
+                description: "Aprende y practica subneteo IPv4 fácilmente desde tu teléfono móvil.",
+                start_url: window.location.href,
+                display: "standalone",
+                background_color: "#0f172a",
+                theme_color: "#4f46e5",
+                icons: [
+                    {
+                        src: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512' fill='%23ffffff'><rect width='512' height='512' rx='120' fill='%234f46e5'/><path d='M160 160h192v48H160zm0 96h192v48H160zm0 96h120v48H160z'/></svg>",
+                        sizes: "512x512",
+                        type: "image/svg+xml",
+                        purpose: "any maskable"
+                    }
+                ]
+            };
+
+            const stringManifest = JSON.stringify(manifestData);
+            const blob = new Blob([stringManifest], { type: 'application/json' });
+            const manifestURL = URL.createObjectURL(blob);
+            
+            const manifestLink = document.createElement('link');
+            manifestLink.rel = 'manifest';
+            manifestLink.href = manifestURL;
+            document.head.appendChild(manifestLink);
+
+            // Registrar Service Worker dinámico en memoria
+            if ('serviceWorker' in navigator) {
+                const swCode = `
+                    self.addEventListener('install', (e) => self.skipWaiting());
+                    self.addEventListener('activate', (e) => e.waitUntil(clients.claim()));
+                    self.addEventListener('fetch', (e) => e.respondWith(fetch(e.request)));
+                `;
+                const swBlob = new Blob([swCode], { type: 'application/javascript' });
+                const swUrl = URL.createObjectURL(swBlob);
+                navigator.serviceWorker.register(swUrl).catch(err => console.log('SW Note:', err));
+            }
+        }
+
+        // Evento disparo de instalación en Android / Chrome
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            const btn = document.getElementById('install-pwa-btn');
+            if (btn) btn.classList.add('animate-bounce');
+        });
+
+        function promptPWAInstall() {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                deferredPrompt.userChoice.then((choiceResult) => {
+                    if (choiceResult.outcome === 'accepted') {
+                        console.log('El usuario instaló la aplicación');
+                    }
+                    deferredPrompt = null;
+                });
+            } else {
+                // Si no se puede disparar automáticamente o está en iOS/Safari, mostrar guía modal
+                document.getElementById('install-modal').classList.remove('hidden');
+            }
+        }
+
+        function closeInstallModal() {
+            document.getElementById('install-modal').classList.add('hidden');
+        }
+    </script>
+</body>
+</html>
